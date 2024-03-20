@@ -331,3 +331,32 @@ def get_patient_byid(request):
 
         return Response(response_data,status=status.HTTP_200_OK)
 
+@api_view(["POST"])
+def get_patient_details_by_phone(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    phone_number = request.data.get('phone_number', None)
+
+    if not phone_number:
+        response_data = {'message_code': 999, 'message_text': 'Phone number is required.'}
+    else:
+        try:
+            patient = Tblpatients.objects.get(patient_mobileno=phone_number)
+            serializer = TblPatientsSerializer(patient)
+            response_data = {
+                'message_code': 1000,
+                'message_text': 'Patient details fetched successfully.',
+                'message_data': serializer.data,
+                'message_debug': debug
+            }
+        except Tblpatients.DoesNotExist:
+            response_data = {'message_code': 999, 'message_text': 'Patient not found.', 'message_debug': debug}
+
+    return Response(response_data, status=status.HTTP_200_OK)
+

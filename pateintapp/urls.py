@@ -19,5 +19,6 @@ urlpatterns = [
      path("delete_patient/",delete_patient),
      path("get_patient_byid/",get_patient_byid),
      path("get_patient_details_by_phone/",get_patient_details_by_phone),
+     path("get_patients_by_mobile_number/",get_patients_by_mobile_number),
 ]
 

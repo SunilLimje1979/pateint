@@ -360,3 +360,37 @@ def get_patient_details_by_phone(request):
 
     return Response(response_data, status=status.HTTP_200_OK)
 
+
+##########################patient selection##########################
+@api_view(["POST"])
+def get_patients_by_mobile_number(request):
+    # Retrieve the mobile number from the request data
+    mobile_number = request.data.get('mobile_number', None)
+
+    # Check if mobile number is provided
+    if not mobile_number:
+        return Response({'message_code': 999, 'message_text': 'Mobile number is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Query all patients matching the given mobile number
+        patients = Tblpatients.objects.filter(patient_mobileno=mobile_number)
+
+        if not patients.exists():
+            return Response({'message_code': 999, 'message_text': 'No patient details found for the given mobile number.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Serialize patient data for all matching patients
+        serializer = TblpatientsSerializer(patients, many=True)
+
+        # Prepare response data
+        response_data = {
+            'message_code': 1000,
+            'message_text': 'Patient details fetched successfully.',
+            'patients_data': serializer.data
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        # Handle exceptions or errors
+        return Response({'message_code': 999, 'message_text': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

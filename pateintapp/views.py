@@ -225,6 +225,7 @@ def insert_patient(request):
         # Calculate Patient_Level based on the provided logic
         patient_mobile_no = request.data.get('patient_mobileno', '')
         cnt = Tblpatients.objects.filter(isdeleted=0, patient_mobileno=patient_mobile_no).count()
+        request.data['follower']=cnt
 
         if cnt >= 1:
             request.data['patient_level'] = 'C'

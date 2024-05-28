@@ -395,3 +395,90 @@ def get_patients_by_mobile_number(request):
         # Handle exceptions or errors
         return Response({'message_code': 999, 'message_text': f'Error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+# @api_view(["POST"])
+# def update_patient_by_id(request):
+#     debug = []
+#     response_data = {
+#         'message_code': 999,
+#         'message_text': 'Functional part is commented.',
+#         'message_data': [],
+#         'message_debug': debug
+#     }
+
+#     patient_id = request.data.get('patient_id', None)
+
+#     if not patient_id:
+#         response_data['message_text'] = 'Patient ID is required.'
+#         return Response(response_data, status=status.HTTP_200_OK)
+
+#     try:
+#         # Get the patient instance
+#         patient = Tblpatients.objects.get(patient_id=patient_id)
+#     except Tblpatients.DoesNotExist:
+#         response_data['message_text'] = 'Patient not found.'
+#         return Response(response_data, status=status.HTTP_200_OK)
+
+#     # Serialize the data
+#     serializer = TblPatientsSerializer(patient, data=request.data, partial=True)
+
+#     if serializer.is_valid():
+#         serializer.save()
+#         response_data['message_code'] = 1000
+#         response_data['message_text'] = 'Patient details updated successfully'
+#         response_data['message_data'] = {'patient_details': serializer.data}
+#     else:
+#         response_data['message_text'] = 'Invalid data provided.'
+#         response_data['message_data'] = serializer.errors
+
+#     return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def update_patient_by_id(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    patient_id = request.data.get('patient_id', None)
+    updated_data = request.data
+
+    if not patient_id:
+        response_data['message_text'] = 'Patient ID is required.'
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    try:
+        # Get the patient instance
+        patient = Tblpatients.objects.get(patient_id=patient_id)
+    except Tblpatients.DoesNotExist:
+        response_data['message_text'] = 'Patient not found.'
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    # Convert the DOB string to epoch timestamp if provided
+    dob_str = updated_data.get('patient_dateofbirth', None)
+    if dob_str:
+        try:
+            dob = datetime.strptime(dob_str, '%Y-%m-%d')
+            epoch_time = int(dob.timestamp())
+            updated_data['patient_dateofbirth'] = epoch_time
+        except ValueError:
+            response_data['message_text'] = 'Invalid date format. Use YYYY-MM-DD.'
+            return Response(response_data, status=status.HTTP_200_OK)
+
+    # Serialize the data
+    serializer = TblPatientsSerializer(patient, data=updated_data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        response_data['message_code'] = 1000
+        response_data['message_text'] = 'Patient details updated successfully'
+        response_data['message_data'] = {'patient_details': serializer.data}
+    else:
+        response_data['message_text'] = 'Invalid data provided.'
+        response_data['message_data'] = serializer.errors
+
+    return Response(response_data, status=status.HTTP_200_OK)
+

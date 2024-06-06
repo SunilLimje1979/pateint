@@ -482,3 +482,295 @@ def update_patient_by_id(request):
 
     return Response(response_data, status=status.HTTP_200_OK)
 
+
+##################NEW API###################################
+@api_view(["POST"])
+def insert_disease(request):
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': []
+    }
+
+    disease_data = request.data
+
+    disease_serializer = TblMasterDiseaseSerializer(data=disease_data)
+
+    if disease_serializer.is_valid():
+        disease_instance = disease_serializer.save()
+        response_data['message_code'] = 1000
+        response_data['message_text'] = 'Data successfully saved!'
+        response_data['message_data'] = {'disease_id': disease_instance.disease_id}
+    else:
+        errors = {
+            'doctor_leave_errors': disease_serializer.errors,
+        }
+        response_data['message_text'] = 'Failed to save data. Please check the errors.'
+        response_data['errors'] = errors
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def get_diseases_by_doctorid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    doctor_id = request.data.get('doctor_id', None)
+
+    if not doctor_id:
+        response_data = {'message_code': 999, 'message_text': 'Doctor id is required.'}
+    else:
+        try:
+            disease = tblMasterDisease.objects.filter(doctor_id=doctor_id)
+            if disease.exists():
+                serializer = TblMasterDiseaseSerializer(disease, many=True)
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Disease details fetched successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+
+            else:
+                response_data = {'message_code': 999, 'message_text': 'No diseases found for the given doctor ID.', 'message_data': [], 'message_debug': debug}
+        except tblMasterDisease.DoesNotExist:
+            response_data = {'message_code': 999, 'message_text': 'An error occurred while fetching diseases.', 'message_debug': debug}
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def get_diseases_by_diseaseid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    disease_id = request.data.get('disease_id', None)
+
+    if not disease_id:
+        response_data = {'message_code': 999, 'message_text': 'Disease id is required.'}
+    else:
+        try:
+            disease = tblMasterDisease.objects.filter(disease_id=disease_id)
+            if disease.exists():
+                serializer = TblMasterDiseaseSerializer(disease,many=True)
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Disease details fetched successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+
+            else:
+                response_data = {'message_code': 999, 'message_text': 'No diseases found for the given disease ID.', 'message_data': [], 'message_debug': debug}
+        except tblMasterDisease.DoesNotExist:
+            response_data = {'message_code': 999, 'message_text': 'An error occurred while fetching diseases.', 'message_debug': debug}
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def update_disease_by_diseaseid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    disease_id = request.data.get('disease_id', None)
+    disease_data = request.data
+
+    if not disease_id:
+        response_data = {'message_code': 999, 'message_text': 'Disease id is required.'}
+    elif not disease_data:
+        response_data = {'message_code': 999, 'message_text': 'Disease data is required to update.'}
+    else:
+        try:
+            disease = tblMasterDisease.objects.get(disease_id=disease_id)
+            serializer = TblMasterDiseaseSerializer(disease, data=disease_data, partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Disease details updated successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'Invalid data.',
+                    'message_data': serializer.errors,
+                    'message_debug': debug
+                }
+        except tblMasterDisease.DoesNotExist:
+            response_data = {'message_code': 999, 'message_text': 'Disease not found for the given disease ID.', 'message_debug': debug}
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def insert_allergy(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    allergy_data = request.data
+
+    if not allergy_data:
+        response_data = {'message_code': 999, 'message_text': 'Allergy data is required.'}
+    else:
+        try:
+            serializer = TblMasterAllergySerializer(data=allergy_data)
+            if serializer.is_valid():
+                serializer.save()
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Allergy details inserted successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'Invalid data.',
+                    'message_data': serializer.errors,
+                    'message_debug': debug
+                }
+        except Exception as e:
+            debug.append(str(e))
+            response_data = {'message_code': 999, 'message_text': 'An error occurred while inserting allergy.', 'message_debug': debug}
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def get_allergies_by_doctorid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    doctor_id = request.data.get('doctor_id', None)
+
+    if not doctor_id:
+        response_data = {'message_code': 999, 'message_text': 'Doctor ID is required.'}
+    else:
+        try:
+            allergies = tblMasterAllergies.objects.filter(doctor_id=doctor_id, is_deleted=0)
+            if allergies.exists():
+                serializer = TblMasterAllergySerializer(allergies, many=True)
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Allergy details fetched successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {'message_code': 999, 'message_text': 'No allergies found for the given doctor ID.', 'message_data': [], 'message_debug': debug}
+        except Exception as e:
+            debug.append(str(e))
+            response_data = {'message_code': 999, 'message_text': 'An error occurred while fetching allergies.', 'message_debug': debug}
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def get_allergy_by_allergyid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    allergy_id = request.data.get('allergy_id', None)
+
+    if not allergy_id:
+        response_data = {'message_code': 999, 'message_text': 'Allergy ID is required.'}
+    else:
+        try:
+            allergy = tblMasterAllergies.objects.get(allergy_id=allergy_id, is_deleted=0)
+            serializer = TblMasterAllergySerializer(allergy)
+            response_data = {
+                'message_code': 1000,
+                'message_text': 'Allergy details fetched successfully.',
+                'message_data': serializer.data,
+                'message_debug': debug
+            }
+        except tblMasterAllergies.DoesNotExist:
+            response_data = {'message_code': 999, 'message_text': 'No allergy found for the given allergy ID.', 'message_data': [], 'message_debug': debug}
+        except Exception as e:
+            debug.append(str(e))
+            response_data = {'message_code': 999, 'message_text': 'An error occurred while fetching allergy details.', 'message_debug': debug}
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def update_allergy_by_allergyid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    allergy_id = request.data.get('allergy_id', None)
+    allergy_data = request.data
+
+    if not allergy_id:
+        response_data = {'message_code': 999, 'message_text': 'Allergy ID is required.'}
+    elif not allergy_data:
+        response_data = {'message_code': 999, 'message_text': 'Allergy data is required to update.'}
+    else:
+        try:
+            allergy = tblMasterAllergies.objects.get(allergy_id=allergy_id, is_deleted=0)
+            serializer = TblMasterAllergySerializer(allergy, data=allergy_data, partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Allergy details updated successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'Invalid data.',
+                    'message_data': serializer.errors,
+                    'message_debug': debug
+                }
+        except tblMasterAllergies.DoesNotExist:
+            response_data = {'message_code': 999, 'message_text': 'Allergy not found for the given allergy ID.', 'message_debug': debug}
+        except Exception as e:
+            debug.append(str(e))
+            response_data = {'message_code': 999, 'message_text': 'An error occurred while updating allergy details.', 'message_debug': debug}
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+

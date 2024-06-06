@@ -21,5 +21,13 @@ urlpatterns = [
      path("get_patient_details_by_phone/",get_patient_details_by_phone),
      path("get_patients_by_mobile_number/",get_patients_by_mobile_number),
      path("update_patient_by_id/",update_patient_by_id),
+     path("insert_disease/",insert_disease),
+     path("get_diseases_by_doctorid/",get_diseases_by_doctorid),
+     path("get_diseases_by_diseaseid/",get_diseases_by_diseaseid),
+     path("update_disease_by_diseaseid/",update_disease_by_diseaseid),
+     path("insert_allergy/",insert_allergy),
+     path("get_allergies_by_doctorid/",get_allergies_by_doctorid),
+     path("get_allergy_by_allergyid/",get_allergy_by_allergyid),
+     path("update_allergy_by_allergyid/",update_allergy_by_allergyid),
 ]
 

@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from django.db import models
 from medicify_project.models import * 
 from medicify_project.serializers import *
+import time
 ######################### Patient Charges ############################   
 ######################## Post ############################
 @api_view(['POST'])
@@ -774,3 +775,626 @@ def update_allergy_by_allergyid(request):
     return Response(response_data, status=status.HTTP_200_OK)
 
 
+# @api_view(["POST"])
+# def insert_patient_doctor_link(request):
+#     debug = []
+#     response_data = {
+#         'message_code': 999,
+#         'message_text': 'Functional part is commented.',
+#         'message_data': [],
+#         'message_debug': debug
+#     }
+
+#     data = request.data
+
+#     # Check for compulsory fields (doctor_id and patient_id)
+#     doctor_id = data.get('doctor_id')
+#     patient_id = data.get('patient_id')
+
+#     if not doctor_id:
+#         response_data = {'message_code': 999, 'message_text': 'Doctor ID is required.'}
+#     elif not patient_id:
+#         response_data = {'message_code': 999, 'message_text': 'Patient ID is required.'}
+#     else:
+#         # Create the PatientDoctorLink record
+#         serializer = TblPatientDoctorLinkSerializer(data=data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             response_data = {
+#                 'message_code': 1000,
+#                 'message_text': 'Patient doctor link created successfully.',
+#                 'message_data': serializer.data,
+#                 'message_debug': debug
+#             }
+
+#         else:
+#             response_data = {
+#                 'message_code': 999,
+#                 'message_text': 'Invalid data.',
+#                 'message_data': serializer.errors,
+#                 'message_debug': debug
+#             }
+        
+#     return Response(response_data, status=status.HTTP_200_OK)
+@api_view(["POST"])
+def insert_patient_doctor_link(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    data = request.data
+
+    # Check for compulsory fields (doctor_id and patient_id)
+    doctor_id = data.get('doctor_id')
+    patient_id = data.get('patient_id')
+
+    if not doctor_id:
+        response_data = {'message_code': 999, 'message_text': 'Doctor ID is required.'}
+    elif not patient_id:
+        response_data = {'message_code': 999, 'message_text': 'Patient ID is required.'}
+    else:
+        # Check if the doctor_id and patient_id combination already exists
+        if tblPatientDoctorLink.objects.filter(doctor_id=doctor_id, patient_id=patient_id, is_deleted=0).exists():
+            response_data = {
+                'message_code': 1001,
+                'message_text': 'Patient ID and Doctor ID are already linked.',
+                'message_data': [],
+                'message_debug': debug
+            }
+        else:
+            # Create the PatientDoctorLink record
+            serializer = TblPatientDoctorLinkSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Patient doctor link created successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'Invalid data.',
+                    'message_data': serializer.errors,
+                    'message_debug': debug
+                }
+        
+    return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def get_patient_doctor_links_by_doctor_id(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    doctor_id = request.data.get('doctor_id')
+
+    if not doctor_id:
+        response_data = {'message_code': 999, 'message_text': 'Doctor ID is required.'}
+    else:
+        try:
+            # Fetch all PatientDoctorLink records with the given doctor_id
+            links = tblPatientDoctorLink.objects.filter(doctor_id=doctor_id, is_deleted=0)
+            if links.exists():
+                serializer = TblPatientDoctorLinkSerializer(links, many=True)
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Patient doctor links fetched successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'No patient doctor links found for the given doctor ID.',
+                    'message_data': [],
+                    'message_debug': debug
+                }
+        except Exception as e:
+            response_data = {
+                'message_code': 999,
+                'message_text': 'An error occurred while fetching patient doctor links.',
+                'message_debug': str(e)
+            }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def get_patients_by_doctor_id(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    doctor_id = request.data.get('doctor_id')
+
+    if not doctor_id:
+        response_data = {'message_code': 999, 'message_text': 'Doctor ID is required.'}
+    else:
+        try:
+            # Fetch all PatientDoctorLink records with the given doctor_id
+            links = tblPatientDoctorLink.objects.filter(doctor_id=doctor_id, is_deleted=0)
+            if links.exists():
+                patient_ids = links.values_list('patient_id', flat=True)
+                patients = Tblpatients.objects.filter(patient_id__in=patient_ids)
+                serializer = TblpatientsSerializer(patients, many=True)
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Patient details fetched successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'No patients found for the given doctor ID.',
+                    'message_data': [],
+                    'message_debug': debug
+                }
+        except Exception as e:
+            response_data = {
+                'message_code': 999,
+                'message_text': 'An error occurred while fetching patient details.',
+                'message_debug': str(e)
+            }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def get_patient_doctor_links_by_doctorid_patientid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    doctor_id = request.data.get('doctor_id')
+    patient_id = request.data.get('patient_id')
+
+    if not doctor_id and not patient_id:
+        response_data = {'message_code': 999, 'message_text': 'Doctor ID or Patient ID is required.'}
+    else:
+        try:
+            
+            # Fetch PatientDoctorLink records with the given filters
+            links = tblPatientDoctorLink.objects.filter(patient_id=patient_id,doctor_id=doctor_id)
+            if links.exists():
+                serializer = TblPatientDoctorLinkSerializer(links, many=True)
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Patient doctor links fetched successfully.',
+                    'message_data': serializer.data,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'No patient doctor links found for the given IDs.',
+                    'message_data': [],
+                    'message_debug': debug
+                }
+        except Exception as e:
+            response_data = {
+                'message_code': 999,
+                'message_text': 'An error occurred while fetching patient doctor links.',
+                'message_debug': str(e)
+            }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def update_patient_doctor_link_by_doctorid_patientid(request):
+    # Initialize the response dictionary
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Something went wrong.',
+        'message_data': [],
+        'message_debug': []
+    }
+    
+    # Extract patient_id and doctor_id from the request data
+    patient_id = request.data.get('patient_id')
+    doctor_id = request.data.get('doctor_id')
+
+    if not patient_id or not doctor_id:
+        response_data['message_text'] = 'Patient ID and Doctor ID are required.'
+    else:
+        try:
+            # Fetch the PatientDoctorLink record
+            link = tblPatientDoctorLink.objects.get(patient_id=patient_id, doctor_id=doctor_id)
+            # Deserialize and validate the incoming data
+            serializer = TblPatientDoctorLinkSerializer(link, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                # Save the updated record
+                serializer.save()
+                response_data['message_code'] = 1000
+                response_data['message_text'] = 'PatientDoctorLink updated successfully.'
+                response_data['message_data'] = serializer.data
+            else:
+                response_data['message_text'] = 'Invalid data.'
+                response_data['message_debug'] = serializer.errors
+        except tblPatientDoctorLink.DoesNotExist:
+            response_data['message_text'] = 'PatientDoctorLink not found.'
+        except Exception as e:
+            response_data['message_text'] = 'An error occurred while updating the PatientDoctorLink.'
+            response_data['message_debug'] = str(e)
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+# @api_view(["POST"])
+# def insert_patient_allergies(request):
+#     debug = []
+#     response_data = {
+#         'message_code': 999,
+#         'message_text': 'Functional part is commented.',
+#         'message_data': [],
+#         'message_debug': debug
+#     }
+
+#     data = request.data
+
+#     # Check for compulsory fields (patient_id and allergy_id)
+#     patient_id = data.get('patient_id')
+#     allergy_id = data.get('allergy_id')
+
+#     if not patient_id:
+#         response_data = {'message_code': 999, 'message_text': 'Patient ID is required.'}
+#     elif not allergy_id:
+#         response_data = {'message_code': 999, 'message_text': 'Allergy ID is required.'}
+#     else:
+#         # Create the PatientAllergies record
+#         serializer = TblPatientAllergySerializer(data=data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             response_data = {
+#                 'message_code': 1000,
+#                 'message_text': 'Patient allergy details inserted successfully.',
+#                 'message_data': serializer.data,
+#                 'message_debug': debug
+#             }
+#         else:
+#             response_data = {
+#                 'message_code': 999,
+#                 'message_text': 'Invalid data.',
+#                 'message_data': serializer.errors,
+#                 'message_debug': debug
+#             }
+        
+#     return Response(response_data, status=status.HTTP_200_OK)
+@api_view(["POST"])
+def insert_patient_allergies(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    data = request.data
+
+    # Check for compulsory fields (patient_id and allergy_id)
+    patient_id = data.get('patient_id')
+    allergy_id = data.get('allergy_id')
+
+    if not patient_id:
+        response_data = {'message_code': 999, 'message_text': 'Patient ID is required.'}
+    elif not allergy_id:
+        response_data = {'message_code': 999, 'message_text': 'Allergy ID is required.'}
+    else:
+        # Set the current epoch time as allergy_entry_date
+        data['allergy_entry_date'] = int(time.time())
+
+        # Create the PatientAllergies record
+        serializer = TblPatientAllergySerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            response_data = {
+                'message_code': 1000,
+                'message_text': 'Patient allergy details inserted successfully.',
+                'message_data': serializer.data,
+                'message_debug': debug
+            }
+        else:
+            response_data = {
+                'message_code': 999,
+                'message_text': 'Invalid data.',
+                'message_data': serializer.errors,
+                'message_debug': debug
+            }
+        
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+# @api_view(["POST"])
+# def get_patient_allergies_by_patientid(request):
+#     debug = []
+#     response_data = {
+#         'message_code': 999,
+#         'message_text': 'Functional part is commented.',
+#         'message_data': [],
+#         'message_debug': debug
+#     }
+
+#     patient_id = request.data.get('patient_id')
+
+#     if not patient_id:
+#         response_data = {'message_code': 999, 'message_text': 'Patient ID is required in the request body.'}
+#         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+#     allergies = tblPatientAllergies.objects.filter(patient_id=patient_id, is_deleted=0)
+
+#     if allergies.exists():
+#         serializer = TblPatientAllergySerializer(allergies, many=True)
+#         response_data = {
+#             'message_code': 1000,
+#             'message_text': 'Patient allergies details retrieved successfully.',
+#             'message_data': serializer.data,
+#             'message_debug': debug
+#         }
+#     else:
+#         response_data = {
+#             'message_code': 999,
+#             'message_text': 'Patient allergies not found for the given ID.',
+#             'message_data': [],
+#             'message_debug': debug
+#         }
+
+#     return Response(response_data, status=status.HTTP_200_OK)
+@api_view(["POST"])
+def get_patient_allergies_by_patientid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    patient_id = request.data.get('patient_id')
+
+    if not patient_id:
+        response_data = {'message_code': 999, 'message_text': 'Patient ID is required in the request body.'}
+        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    allergies = tblPatientAllergies.objects.filter(patient_id=patient_id, is_deleted=0)
+
+    if allergies.exists():
+        serializer = TblPatientAllergySerializer(allergies, many=True)
+        allergies_data = serializer.data
+
+        # Add allergy name to each record
+        for allergy in allergies_data:
+            allergy_id = allergy.get('allergy_id')
+            try:
+                allergy_name = tblMasterAllergies.objects.get(allergy_id=allergy_id).allergy_name
+            except tblMasterAllergies.DoesNotExist:
+                allergy_name = None
+            allergy['allergy_name'] = allergy_name
+
+        response_data = {
+            'message_code': 1000,
+            'message_text': 'Patient allergies details retrieved successfully.',
+            'message_data': allergies_data,
+            'message_debug': debug
+        }
+    else:
+        response_data = {
+            'message_code': 999,
+            'message_text': 'Patient allergies not found for the given ID.',
+            'message_data': [],
+            'message_debug': debug
+        }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def insert_patient_diseases(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    data = request.data
+
+    # Check for compulsory fields (patient_id and disease_id)
+    patient_id = data.get('patient_id')
+    disease_id = data.get('disease_id')
+
+    if not patient_id:
+        response_data = {'message_code': 999, 'message_text': 'Patient ID is required.'}
+    elif not disease_id:
+        response_data = {'message_code': 999, 'message_text': 'Disease ID is required.'}
+    else:
+        # Set the current epoch time as disease_entry_date
+        data['disease_entry_date'] = int(time.time())
+
+        # Create the PatientDisease record
+        serializer = TblPatientDiseaseSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            response_data = {
+                'message_code': 1000,
+                'message_text': 'Patient disease details inserted successfully.',
+                'message_data': serializer.data,
+                'message_debug': debug
+            }
+        else:
+            response_data = {
+                'message_code': 999,
+                'message_text': 'Invalid data.',
+                'message_data': serializer.errors,
+                'message_debug': debug
+            }
+        
+    return Response(response_data, status=status.HTTP_200_OK)
+
+# @api_view(["POST"])
+# def get_patient_diseases_by_patientid(request):
+#     debug = []
+#     response_data = {
+#         'message_code': 999,
+#         'message_text': 'Functional part is commented.',
+#         'message_data': [],
+#         'message_debug': debug
+#     }
+
+#     patient_id = request.data.get('patient_id')
+
+#     if not patient_id:
+#         response_data = {'message_code': 999, 'message_text': 'Patient ID is required in the request body.'}
+#         return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+#     diseases = tblPatientDisease.objects.filter(patient_id=patient_id, is_deleted=0)
+
+#     if diseases.exists():
+#         serializer = TblPatientDiseaseSerializer(diseases, many=True)
+#         response_data = {
+#             'message_code': 1000,
+#             'message_text': 'Patient diseases details retrieved successfully.',
+#             'message_data': serializer.data,
+#             'message_debug': debug
+#         }
+#     else:
+#         response_data = {
+#             'message_code': 999,
+#             'message_text': 'Patient diseases not found for the given ID.',
+#             'message_data': [],
+#             'message_debug': debug
+#         }
+
+#     return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def get_patient_diseases_by_patientid(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    patient_id = request.data.get('patient_id')
+
+    if not patient_id:
+        response_data = {'message_code': 999, 'message_text': 'Patient ID is required in the request body.'}
+        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    diseases = tblPatientDisease.objects.filter(patient_id=patient_id, is_deleted=0)
+
+    if diseases.exists():
+        serializer = TblPatientDiseaseSerializer(diseases, many=True)
+        diseases_data = serializer.data
+
+        # Add disease name to each record
+        for disease in diseases_data:
+            disease_id = disease.get('disease_id')
+            try:
+                disease_name = tblMasterDisease.objects.get(disease_id=disease_id).disease_name
+            except tblMasterDisease.DoesNotExist:
+                disease_name = None
+            disease['disease_name'] = disease_name
+
+        response_data = {
+            'message_code': 1000,
+            'message_text': 'Patient diseases details retrieved successfully.',
+            'message_data': diseases_data,
+            'message_debug': debug
+        }
+    else:
+        response_data = {
+            'message_code': 999,
+            'message_text': 'Patient diseases not found for the given ID.',
+            'message_data': [],
+            'message_debug': debug
+        }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def delete_patient_allergy(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    patient_allergy_id = request.data.get('patient_allergy_id')
+
+    if not patient_allergy_id:
+        response_data['message_text'] = 'patient_allergy_id is required in the request body.'
+        response_data['message_code'] = 999
+    else:
+        try:
+            allergy = tblPatientAllergies.objects.get(patient_allergy_id=patient_allergy_id)
+            allergy.is_deleted = 1
+            allergy.save()
+            response_data['message_code'] = 1000
+            response_data['message_text'] = 'Allergy marked as deleted successfully.'
+        except tblPatientAllergies.DoesNotExist:
+            response_data['message_code'] = 999
+            response_data['message_text'] = 'Allergy not found for the given ID.'
+        except Exception as e:
+            response_data['message_code'] = 999
+            response_data['message_text'] = str(e)
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def delete_patient_disease(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    patient_disease_id = request.data.get('patient_disease_id')
+
+    if not patient_disease_id:
+        response_data['message_text'] = 'patient_disease_id is required in the request body.'
+        response_data['message_code'] = 999
+    else:
+        try:
+            disease = tblPatientDisease.objects.get(patient_disease_id=patient_disease_id)
+            disease.is_deleted = 1
+            disease.save()
+            response_data['message_code'] = 1000
+            response_data['message_text'] = 'Disease marked as deleted successfully.'
+        except tblPatientDisease.DoesNotExist:
+            response_data['message_code'] = 999
+            response_data['message_text'] = 'Disease not found for the given ID.'
+        except Exception as e:
+            response_data['message_code'] = 999
+            response_data['message_text'] = str(e)
+
+    return Response(response_data, status=status.HTTP_200_OK)

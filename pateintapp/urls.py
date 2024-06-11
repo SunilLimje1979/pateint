@@ -29,5 +29,16 @@ urlpatterns = [
      path("get_allergies_by_doctorid/",get_allergies_by_doctorid),
      path("get_allergy_by_allergyid/",get_allergy_by_allergyid),
      path("update_allergy_by_allergyid/",update_allergy_by_allergyid),
+     path("insert_patient_doctor_link/",insert_patient_doctor_link),
+     path("get_patient_doctor_links_by_doctor_id/",get_patient_doctor_links_by_doctor_id),
+     path("get_patients_by_doctor_id/",get_patients_by_doctor_id),
+     path("get_patient_doctor_links_by_doctorid_patientid/",get_patient_doctor_links_by_doctorid_patientid),
+     path("update_patient_doctor_link_by_doctorid_patientid/",update_patient_doctor_link_by_doctorid_patientid),
+     path("insert_patient_allergies/",insert_patient_allergies),
+     path("get_patient_allergies_by_patientid/",get_patient_allergies_by_patientid),
+     path("insert_patient_diseases/",insert_patient_diseases),
+     path("get_patient_diseases_by_patientid/",get_patient_diseases_by_patientid),
+     path("delete_patient_allergy/",delete_patient_allergy),
+     path("delete_patient_disease/",delete_patient_disease),
 ]
 

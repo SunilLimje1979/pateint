@@ -16,9 +16,11 @@ def fi_insert_patient_charges(request):
     res = {'message_code': 999, 'message_text': 'Functional part is commented.', 'message_data': {}, 'message_debug': debug}
 
     try:
-        data=request.data
+        data=request.data.copy() 
         data['isdeleted']=0
-        serializer = PatientChargesSerializer(data=request.data)
+        current_datetime = datetime.now()
+        data['createdon']=int(current_datetime.timestamp())
+        serializer = PatientChargesSerializer(data=data)
         
 
         if serializer.is_valid():
@@ -138,11 +140,14 @@ def insert_patient_payments(request):
 
         try:
             # Extract only allowed fields from the request body
-            allowed_fields = ['doctor_id', 'patient_id', 'patient_status', 'payment_mode', 'payment_amount', 'payment_transaction_no','isdeleted']
-            body = {key: request.data[key] for key in allowed_fields if key in request.data}
-            body['isdeleted']=0
+            # allowed_fields = ['doctor_id', 'patient_id', 'patient_status', 'payment_mode', 'payment_amount', 'payment_transaction_no','isdeleted']
+            # body = {key: request.data[key] for key in allowed_fields if key in request.data}
+            data=request.data.copy() 
+            data['isdeleted']=0
+            current_datetime = datetime.now()
+            data['createdon']=int(current_datetime.timestamp())
 
-            serializer = TblpatientPaymentsSerializer(data=body)
+            serializer = TblpatientPaymentsSerializer(data=data)
 
             # Validate the data using the serializer
             if serializer.is_valid():
@@ -1396,5 +1401,51 @@ def delete_patient_disease(request):
         except Exception as e:
             response_data['message_code'] = 999
             response_data['message_text'] = str(e)
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+
+#################Api to get patient details through appointment id
+@api_view(['POST'])
+def get_patient_details_by_appointment_id(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    appointment_id = request.data.get('appointment_id')
+
+    if not appointment_id:
+        response_data['message_text'] = 'appointment_id is required in the request body.'
+        response_data['message_code'] = 999
+    else:
+        try:
+            # Fetch the patient vitals record associated with the appointment ID
+            patient_vitals = Tblpatientvitals.objects.get(appointment_id=appointment_id, isdeleted=0)
+            patient_id = patient_vitals.patient_id
+            
+            # Fetch the patient details
+            patient = Tblpatients.objects.get(patient_id=patient_id.patient_id, isdeleted=0)
+            
+            # Serialize the patient details
+            serializer = TblPatientsSerializer(patient)
+            response_data['message_code'] = 1000
+            response_data['message_text'] = 'Patient details fetched successfully.'
+            response_data['message_data'] = serializer.data
+            
+        except Tblpatientvitals.DoesNotExist:
+            response_data['message_code'] = 999
+            response_data['message_text'] = 'No patient vitals found for the given appointment ID.'
+        except Tblpatients.DoesNotExist:
+            response_data['message_code'] = 999
+            response_data['message_text'] = 'No patient found for the given patient ID.'
+        except Exception as e:
+            response_data['message_code'] = 999
+            response_data['message_text'] = str(e)
+            debug.append(str(e))
 
     return Response(response_data, status=status.HTTP_200_OK)

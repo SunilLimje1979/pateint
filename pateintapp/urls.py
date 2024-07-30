@@ -40,5 +40,6 @@ urlpatterns = [
      path("get_patient_diseases_by_patientid/",get_patient_diseases_by_patientid),
      path("delete_patient_allergy/",delete_patient_allergy),
      path("delete_patient_disease/",delete_patient_disease),
+     path('get_patient_details_by_appointment_id/',get_patient_details_by_appointment_id,name='get_patient_details_by_appointment_id'),
 ]
 

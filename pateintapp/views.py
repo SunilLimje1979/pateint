@@ -518,6 +518,39 @@ def insert_disease(request):
     return Response(response_data, status=status.HTTP_200_OK)
 
 
+# @api_view(["POST"])
+# def get_diseases_by_doctorid(request):
+#     debug = []
+#     response_data = {
+#         'message_code': 999,
+#         'message_text': 'Functional part is commented.',
+#         'message_data': [],
+#         'message_debug': debug
+#     }
+
+#     doctor_id = request.data.get('doctor_id', None)
+
+#     if not doctor_id:
+#         response_data = {'message_code': 999, 'message_text': 'Doctor id is required.'}
+#     else:
+#         try:
+#             disease = tblMasterDisease.objects.filter(doctor_id=doctor_id)
+#             if disease.exists():
+#                 serializer = TblMasterDiseaseSerializer(disease, many=True)
+#                 response_data = {
+#                     'message_code': 1000,
+#                     'message_text': 'Disease details fetched successfully.',
+#                     'message_data': serializer.data,
+#                     'message_debug': debug
+#                 }
+
+#             else:
+#                 response_data = {'message_code': 999, 'message_text': 'No diseases found for the given doctor ID.', 'message_data': [], 'message_debug': debug}
+#         except tblMasterDisease.DoesNotExist:
+#             response_data = {'message_code': 999, 'message_text': 'An error occurred while fetching diseases.', 'message_debug': debug}
+
+#     return Response(response_data, status=status.HTTP_200_OK)
+from django.db.models import Q
 @api_view(["POST"])
 def get_diseases_by_doctorid(request):
     debug = []
@@ -534,7 +567,8 @@ def get_diseases_by_doctorid(request):
         response_data = {'message_code': 999, 'message_text': 'Doctor id is required.'}
     else:
         try:
-            disease = tblMasterDisease.objects.filter(doctor_id=doctor_id)
+            # Filter records where doctor_id matches or is None
+            disease = tblMasterDisease.objects.filter((Q(doctor_id=doctor_id) | Q(doctor_id__isnull=True)) & Q(is_deleted=0))
             if disease.exists():
                 serializer = TblMasterDiseaseSerializer(disease, many=True)
                 response_data = {
@@ -543,11 +577,19 @@ def get_diseases_by_doctorid(request):
                     'message_data': serializer.data,
                     'message_debug': debug
                 }
-
             else:
-                response_data = {'message_code': 999, 'message_text': 'No diseases found for the given doctor ID.', 'message_data': [], 'message_debug': debug}
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'No diseases found for the given doctor ID.',
+                    'message_data': [],
+                    'message_debug': debug
+                }
         except tblMasterDisease.DoesNotExist:
-            response_data = {'message_code': 999, 'message_text': 'An error occurred while fetching diseases.', 'message_debug': debug}
+            response_data = {
+                'message_code': 999,
+                'message_text': 'An error occurred while fetching diseases.',
+                'message_debug': debug
+            }
 
     return Response(response_data, status=status.HTTP_200_OK)
 
@@ -683,7 +725,9 @@ def get_allergies_by_doctorid(request):
         response_data = {'message_code': 999, 'message_text': 'Doctor ID is required.'}
     else:
         try:
-            allergies = tblMasterAllergies.objects.filter(doctor_id=doctor_id, is_deleted=0)
+            # allergies = tblMasterAllergies.objects.filter(Q(doctor_id=doctor_id) | Q(doctor_id__isnull=True))
+            allergies = tblMasterAllergies.objects.filter((Q(doctor_id=doctor_id) | Q(doctor_id__isnull=True)) & Q(is_deleted=0)).order_by('-doctor_id')
+
             if allergies.exists():
                 serializer = TblMasterAllergySerializer(allergies, many=True)
                 response_data = {

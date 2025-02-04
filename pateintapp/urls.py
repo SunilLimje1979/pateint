@@ -41,5 +41,6 @@ urlpatterns = [
      path("delete_patient_allergy/",delete_patient_allergy),
      path("delete_patient_disease/",delete_patient_disease),
      path('get_patient_details_by_appointment_id/',get_patient_details_by_appointment_id,name='get_patient_details_by_appointment_id'),
+     path('get_doctors_by_patient_id/',get_doctors_by_patient_id,name='get_doctors_by_patient_id'),
 ]
 

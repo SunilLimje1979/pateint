@@ -1493,3 +1493,53 @@ def get_patient_details_by_appointment_id(request):
             debug.append(str(e))
 
     return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+def get_doctors_by_patient_id(request):
+    debug = []
+    response_data = {
+        'message_code': 999,
+        'message_text': 'Functional part is commented.',
+        'message_data': [],
+        'message_debug': debug
+    }
+
+    patient_id = request.data.get('patient_id')
+
+    if not patient_id:
+        response_data = {'message_code': 999, 'message_text': 'Patient ID is required.'}
+    else:
+        try:
+            # Fetch all DoctorPatientLink records with the given patient_id
+            links = tblPatientDoctorLink.objects.filter(patient_id=patient_id, is_deleted=0)
+            if links.exists():
+                doctor_ids = links.values_list('doctor_id', flat=True)
+                doctors = Tbldoctors.objects.filter(doctor_id__in=doctor_ids)
+                # serializer = DoctorSerializer(doctors, many=True)
+                # Convert doctors to a list of dictionaries, excluding 'password'
+                doctors_list = list(doctors.values())  # Converts QuerySet to list of dicts
+                
+                # Remove 'password' from each doctor record
+                for doctor in doctors_list:
+                    doctor.pop('password', None)
+                response_data = {
+                    'message_code': 1000,
+                    'message_text': 'Doctor details fetched successfully.',
+                    'message_data': doctors_list,
+                    'message_debug': debug
+                }
+            else:
+                response_data = {
+                    'message_code': 999,
+                    'message_text': 'No doctors found for the given patient ID.',
+                    'message_data': [],
+                    'message_debug': debug
+                }
+        except Exception as e:
+            response_data = {
+                'message_code': 999,
+                'message_text': 'An error occurred while fetching doctor details.',
+                'message_debug': str(e)
+            }
+
+    return Response(response_data, status=status.HTTP_200_OK)
